@@ -73,6 +73,13 @@ int envoyerReponse404(char *nomFichier);
 
 int envoyerReponse500(char *message);
 
+struct date 
+{
+	unsigned int j; //jour
+	unsigned int m;	//mois
+	unsigned int a; //an
+};
+typedef struct date *date_s;
 /*struct hotel{
 	char *nom;
 	char *ville;

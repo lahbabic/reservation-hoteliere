@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h> 
 #include "client.h"
 #include <string.h>
 
@@ -33,15 +34,19 @@ char            *getStr(){
 	return input;
 }
 
+
 void 			menu_reservation(){
 
 	printf("\nTrouvez la chambre qui vous convient!\n");
-	char *ville;
-	char *nom;
-	char *prenom;
-	int cat; //catégorie
+	char *ville;  char *nom;  char *prenom;  char *message;
 	char buff[1024];
-	int len;
+	int cat = 99; //catégorie
+	int len = 0, err = 0;
+	date_s d;
+	d = (date_s)malloc(sizeof(struct date));
+	time_t ti = time(NULL);
+	struct tm * t = localtime(&ti);
+	printf("%02u\n",t->tm_mday ); 
 	//date 
 	//char *message;
 	printf("\nQuel est votre Nom:\n");
@@ -57,7 +62,25 @@ void 			menu_reservation(){
 		if(cat <= 0 || cat > 5)
 			printf("\nLa categorie doit etre comprise entre 1 et 5\n\n>>  ");	
 	}while(cat <= 0 || cat > 5);
-	snprintf(buff,1023,"INSERT %s %s %d %d %d\n",nom ,ville ,cat ,prix_ch ,nb_ch);
+	printf("\nLa date souhaite de votre nuitee (jj/mm/aaaa)\n\n>>  ");//il y a possibilité que de reserver une nuit dans cette version 
+	do{
+		err = 0;
+		while(scanf("%02d/%02d/%04d",&d->j, &d->m, &d->a)!=3){
+			vider_buffer();
+			printf("\nLa date doit etre sous le format suivant (jj/mm/aaaa)\n\n>>  ");
+		}	
+		if(d->a <= 0 || d->a < t->tm_year+1900 )
+			printf("\nVeuillez choisir une annee valide \n\n>>  ");
+		else if(d->m <= 0 || d->m > 12 || (d->m < t->tm_mon+1 && t->tm_year+1900 == d->a))
+			printf("\nVeuillez choisir un mois valide \n\n>>  ");
+		else if(d->j <= 0 || d->j > 31 || (d->j < t->tm_mday && d->m == t->tm_mon+1 && t->tm_year+1900 == d->a))
+			printf("\nVeuillez choisir un jour valide \n\n>>  ");
+		else 
+			err++;
+	}while(err != 1);
+
+	
+	snprintf(buff,1023,"SEARCH %s %d %d/%d/%d\n",ville ,cat ,d->j ,d->m ,d->a);
 	len = strlen(buff);
 	message = (char*)malloc(len*sizeof(char));
 	while(len >= 0){
@@ -68,7 +91,9 @@ void 			menu_reservation(){
 	if( Emission(message) !=1)
 		printf("Erreur d'emission.\n");
 	free(message);
-	free(nom); free(ville); free(prenom);
+	message = Reception();
+	printf("\n\n###  %s\n\n\n",message);
+	free(message); free(nom); free(ville); free(prenom);
 }
 
 void 			menu_enregistrement(){

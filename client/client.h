@@ -43,6 +43,13 @@ int EmissionBinaire(char *donnees, size_t taille);
 //void 			menu_reservation();
 //void 			menu_enregistrement();
 
+struct date 
+{
+	unsigned int j; //jour
+	unsigned int m;	//mois
+	unsigned int a; //an
+};
+typedef struct date *date_s;
 
 /* Ferme la connexion.
  */
