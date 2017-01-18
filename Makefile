@@ -13,7 +13,12 @@ mainClient: client/mainClient.c client/client.o
 mainS: serveur/mainS.c serveur/serveur.o
 	gcc $(FLAGS) $^ -o serveur/$@
 	
+<<<<<<< HEAD
 clean: 
 	rm serveur/*.o serveur/mainS; rm client/*.o client/mainClient
+=======
+clean: serveur/mainServeur.o client/mainClient.o
+	rm serveur/serveur.o | rm  client/client.o 
+>>>>>>> 26375247e1e95aa3af0d993d9fe5b8dd2a13e67c
 
 
