@@ -14,7 +14,7 @@ mainS: serveur/mainS.c serveur/serveur.o
 	gcc $(FLAGS) $^ -o serveur/$@
 
 clean: 
-	rm serveur/*.o serveur/mainS; rm client/*.o client/mainClient
+	rm serveur/*.o serveur/mainS serveur/mainServeur; rm client/*.o client/mainClient
 
 
 
