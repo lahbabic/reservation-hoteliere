@@ -8,7 +8,7 @@ void 			vider_buffer();
 
 /*fonction permettant de sécuriser la saisie de l'utilisateur, pour éviter des buffers overflow,
 ainsi que si l'utilisateur ne saisie rien on lui demandera de resaisir*/
-char            *getStr(){
+char            *getStr(){ // fonction à améliorer!!
 
 	int len; 
 	char tmp[1000];
@@ -90,9 +90,11 @@ void 			menu_reservation(){
 	// envoyer la requete au serveur 
 	if( Emission(message) !=1)
 		printf("Erreur d'emission.\n");
-	free(message);
-	message = Reception();
-	printf("\n\n###  %s\n\n\n",message);
+	while(message!=NULL){
+		free(message);
+		message = Reception();
+		printf("\n\n###  %s\n",message);
+	}
 	free(message); free(nom); free(ville); free(prenom);
 }
 

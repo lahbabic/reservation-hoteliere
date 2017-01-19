@@ -7,7 +7,7 @@
 /* fonction permettant d'extraire une requete du message recu par le serveur;
 elle s'occupe uniquement d'extraire le premier élément du message et n'en pas de savoir
 si la requete est reconnue par le serveur ou pas*/
-char 		*extract_request(char *message)
+char 		*extract_first_str(char *message)
 {
 	char tmp[20]; char *requete;
 	int len;
@@ -21,7 +21,8 @@ char 		*extract_request(char *message)
 	return requete;
 }
 
-/* cette fonction permet d'inserer les informations relatives à un hotel dans la base de donnée(ici un fichier "hotel")*/
+/* cette fonction permet d'inserer les informations relatives à un hotel 
+dans la base de donnée(ici un fichier "hotel")*/
 int 		insert(char* message)
 {
 	char *requete;
@@ -30,7 +31,7 @@ int 		insert(char* message)
 	fp = fopen("hotel","a");
 	if(fp == NULL) //Erreur d'ouverture du fichier
 		return 1;	
-	requete = extract_request(message);
+	requete = extract_first_str(message);
 	len = strlen(requete);
 	/*Si le nombre d'éléments à écrire dans le fichier ne correspond pas aux nombres d'éléments écrit*/
 	if(fprintf(fp,"%s",(message+len+1)) != strlen(message+len+1))
@@ -41,10 +42,38 @@ int 		insert(char* message)
 	fclose(fp);
 	return 0;
 }
-
+/* Cette fonction permet de rechercher dans le fichier s'il y a des hotels correspondant 
+aux informations demander par le client pour ensuite lui permettre de choisir un hotel afin de reserver
+une chambre */
+int 		search(char* message)
+{
+	FILE *fp;
+	char *s;  char *str; char tmp[100];
+	int len;
+	str = extract_first_str(message);	// extraire la requete afin de savoir sa taille
+	len = strlen(str);
+	str = extract_first_str(message+len+1);// extraire le premier élément après la requete donc la ville
+	fp = fopen("hotel","r");
+	if(fp == NULL) //Erreur d'ouverture du fichier
+		return 1;
+	while(fgets(tmp, 100, fp))
+	{
+		s = extract_first_str(tmp);	
+		len = strlen(s);
+		s = extract_first_str(tmp+len+1);
+		if(strcmp(str,s)==0){
+			if( Emission(tmp) !=1)
+				printf("Erreur d'emission.\n");
+			//free(message);
+		}
+	}
+	
+    printf("zefdzezf%s\n",str);
+	return 0;
+}
 int main ()
 {
-	int fini, err;
+	int fini, err;	
 	char *message = NULL;
 	char *requete = NULL;
 	//char nomFichier[30];
@@ -60,7 +89,7 @@ int main ()
 			message = Reception();
 			printf("J'ai recu: %s\n", message);
 			if(message!=NULL){
-				requete = extract_request(message);
+				requete = extract_first_str(message);
 				if(strcmp(requete,"INSERT")==0){
 					err = insert(message);
 					if(err == 0){
@@ -75,7 +104,7 @@ int main ()
 				}
 				else if(strcmp(requete,"SEARCH")==0)
 				{
-					/* code */
+					search(message);
 				}
 				free(message);
 			}else

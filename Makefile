@@ -10,6 +10,9 @@ serveur.o: serveur/serveur.c serveur/serveur.h
 mainClient: client/mainClient.c client/client.o 
 	gcc $(FLAGS) $^ -o client/$@
 
+mainServeur: serveur/mainServeur.c serveur/serveur.o
+	gcc $(FLAGS) $^ -o serveur/$@
+
 mainS: serveur/mainS.c serveur/serveur.o
 	gcc $(FLAGS) $^ -o serveur/$@
 
