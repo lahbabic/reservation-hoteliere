@@ -16,7 +16,7 @@ char *tolowercase(char *tmp)//met tous les caractères en minuscule pour une bon
 	{
 		tmp[i] = (char)tolower(tmp[i]);
 	}
-	tmp[i+1] = '\0';
+	tmp[i] = '\0';
 	return tmp;
 }
 
