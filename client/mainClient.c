@@ -25,12 +25,10 @@ char            *getStr(){ // fonction à améliorer!!
 		return NULL;
 	}
 	tmp[strlen(tmp)-1] = '\0'; // enlever \n de la chaine
-	len = strlen(tmp);
-	input = (char *)malloc(len*sizeof(char));
-	while(len >= 0){
-		input[len] = tmp[len];
-		len--;
-	}
+	for (len = 0; tmp[len] != '\0' || len > 999; ++len);
+	input = (char *)malloc(len+1*sizeof(char));
+	strncpy(input,tmp,len+1);
+	input[len] = '\0';
 	return input;
 }
 
@@ -81,20 +79,26 @@ void 			menu_reservation(){
 
 	
 	snprintf(buff,1023,"SEARCH %s %d %d/%d/%d\n",ville ,cat ,d->j ,d->m ,d->a);
-	len = strlen(buff);
-	message = (char*)malloc(len*sizeof(char));
-	while(len >= 0){
-		message[len] = buff[len];
-		len--;
-	}
+	for (len = 0; buff[len] != '\0' || len > 99; ++len);
+	message = (char*)malloc((len+1)*sizeof(char));
+	strncpy(message,buff,len+1);
+	message[len] = '\0';
 	// envoyer la requete au serveur 
+	
 	if( Emission(message) !=1)
 		printf("Erreur d'emission.\n");
-	while(message!=NULL){
+
+	do
+	{
 		free(message);
 		message = Reception();
-		printf("\n\n###  %s\n",message);
-	}
+		if(message !=NULL){
+			message[strlen(message)-1] = '\0';
+			printf("--%s--\n",message );
+		}
+		else
+			break;
+	}while(strcmp(message,"200") != 0 && strcmp(message,"400") != 0);
 	free(message); free(nom); free(ville); free(prenom);
 }
 
