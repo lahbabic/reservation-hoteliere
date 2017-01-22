@@ -39,7 +39,7 @@ void 			menu_reservation(){
 	char *ville;  char *nom;  char *prenom;  char *message;
 	char buff[1024];
 	int cat = 99; //catégorie
-	int len = 0, err = 0;
+	int len = 0, err = 0 , i =0;
 	date_s d;
 	d = (date_s)malloc(sizeof(struct date));
 	time_t ti = time(NULL);
@@ -87,14 +87,13 @@ void 			menu_reservation(){
 	
 	if( Emission(message) !=1)
 		printf("Erreur d'emission.\n");
-
 	do
 	{
 		free(message);
 		message = Reception();
 		if(message !=NULL){
 			message[strlen(message)-1] = '\0';
-			printf("--%s--\n",message );
+			printf("%d %s\n",i++,message);
 		}
 		else
 			break;
@@ -141,11 +140,9 @@ void 			menu_enregistrement(){
 	snprintf(buff,1023,"INSERT %s %s %d %d %d\n",nom ,ville ,cat ,prix_ch ,nb_ch);
 	//transformer le tableau en pointer pour pouvoir l'utiliser hors de cette fonction
 	len = strlen(buff);
-	message = (char*)malloc(len*sizeof(char));
-	while(len >= 0){
-		message[len] = buff[len];
-		len--;
-	}
+	message = (char*)malloc((len+1)*sizeof(char));
+	strncpy(message, buff, len);
+	message[len] = '\0';
 	// envoyer la requete au serveur 
 	if( Emission(message) !=1)
 		printf("Erreur d'emission.\n");
