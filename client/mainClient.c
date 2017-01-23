@@ -44,9 +44,6 @@ void 			menu_reservation(){
 	d = (date_s)malloc(sizeof(struct date));
 	time_t ti = time(NULL);
 	struct tm * t = localtime(&ti);
-	printf("%02u\n",t->tm_mday ); 
-	//date 
-	//char *message;
 	printf("\nQuel est votre Nom:\n");
 	while((nom = getStr()) == NULL);
 	printf("\nQuel est votre Prenom:\n");
@@ -98,7 +95,7 @@ void 			menu_reservation(){
 		else
 			break;
 	}while(strcmp(message,"200") != 0 && strcmp(message,"400") != 0);
-	free(message); free(nom); free(ville); free(prenom);
+	free(message); free(nom); free(ville); free(prenom); free(d);
 }
 
 void 			menu_enregistrement(){
@@ -167,8 +164,13 @@ int main() {
 		printf("\n\n\n\n\t\t**** MENU ****");
 		printf("\n\t------------------------------");
 		printf("\n\t1. Reserver une chambre \n\t2. S'enregistrer en tant qu'hotel\n\t3. Quitter\n");
+
+			
 		printf("\n\n Entrez votre choix: ");
-		scanf("%1d",&choix);
+		while(scanf("%1d",&choix) !=1){
+			printf("\n\n Entrez votre choix: ");
+			vider_buffer();
+		}
 		vider_buffer();
 		switch(choix)
 		{

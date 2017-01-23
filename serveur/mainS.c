@@ -5,6 +5,12 @@
 #include <string.h>
 #include <ctype.h>
 
+typedef struct choix_h *c_h;
+struct choix_h{		//structure qui va stocker les hotels ayant les caractéristiques de ce que le client demande
+	char **tabs;	// matrices d'hotel avec leurs caractérstiques
+	int nb_h_t; // nombres d'hotel trouvée 
+};
+
 char 		*extract_str(char *message, int i);
 char *tolowercase(char *tmp)//met tous les caractères en minuscule pour une bonne comparaison
 {
@@ -23,53 +29,70 @@ char *tolowercase(char *tmp)//met tous les caractères en minuscule pour une bon
 
 
 //fonction permettant de gérer la mémoire et de stocker le pointer donner en argument  
-char** 		mem_store_pointer(char **tabs, char *tab, int i)//mem and store
+c_h 		mem_store_pointer(c_h t_h, char *tab)//mem and store
 {
-
+	int i = t_h->nb_h_t;
 	if(i==1){
-		tabs = (char**)malloc(sizeof(char*));
-		tabs[i-1] = (char*)malloc(sizeof(char)*strlen(tab)+1);
-		strncpy(tabs[i-1],tab,strlen(tab));	
-		tabs[i-1][strlen(tab)]= '\0';
+		t_h->tabs = (char**)malloc(sizeof(char*));
+		t_h->tabs[i-1] = (char*)malloc(sizeof(char)*(strlen(tab)+1));
+		strncpy(t_h->tabs[i-1],tab,strlen(tab)+1);	
+		t_h->tabs[i-1][strlen(tab)]= '\0';
 	}
 	else if(i>1){	
 		char **t1;
-		t1 = (char**)realloc(tabs,i*sizeof(char*)); //reallouer dans la matrice une ligne suplémentaire 
+		t1 = (char**)realloc(t_h->tabs,i*sizeof(char*)); //reallouer dans la matrice une ligne suplémentaire 
 		if(t1==NULL){
-			free(tabs);
+			free(t_h->tabs);
 		}
 		else{
-			tabs = t1;
-			tabs[i-1] = (char*)malloc(sizeof(char)*strlen(tab)+1);// allouer de l'espace à cette nouvelle ligne
-			strncpy(tabs[i-1],tab,strlen(tab));	// copier le contenu de tmp dans la ligne
-			tabs[i-1][strlen(tab)]= '\0';
+			t_h->tabs = t1;
+			t_h->tabs[i-1] = (char*)malloc(sizeof(char)*(strlen(tab)+1));// allouer de l'espace à cette nouvelle ligne
+			strncpy(t_h->tabs[i-1],tab,strlen(tab)+1);	// copier le contenu de tmp dans la ligne
+			t_h->tabs[i-1][strlen(tab)]= '\0';
 		}
 	}
-	return tabs;
+	return t_h;
 }
 
+void		free_str(c_h t_h)
+{
+
+	int i;
+	for (i = 0; i < t_h->nb_h_t; ++i)
+	{
+		free(t_h->tabs[i]);
+	}
+	free(t_h->tabs);		
+	free(t_h);
+}
 
 /* fonction permettant d'extraire une requete du message recu par le serveur;
 elle s'occupe uniquement d'extraire le premier élément du message et n'en pas de savoir
 si la requete est reconnue par le serveur ou pas*/
 char 		*extract_str(char *message, int i)
 {
-	char tmp[100]; char *req;
+	char tmp[100]; char *str = NULL;
 	int len = 0; int len_r = 0;
 	while(i>=1){
-		sscanf(message+len_r, "%s ",tmp);
-		for (len = 0; tmp[len] != '\0' || len > 99; ++len);
+		// récupérer la première sous-chaine qui commence à l'adresse message+len_r et la mettre dans tmp
+		sscanf(message+len_r, "%s ",tmp);//possiblité de buffer overflow<!>!!!!	 
+		for (len = 0; tmp[len] != '\0' || len > 99; ++len); // compter le nombre de caractères dans tmp
 
 		if(len == 0)
 			return NULL;
-		else
-			req = (char*)malloc((len+1) * sizeof(char) );
-		strncpy(req,tmp,len+1);
-		req[len] = '\0';
-		len_r = strlen(req) + len_r+1;
+		else if(str != NULL){
+			free(str);
+			str = (char*)malloc((len+1) * sizeof(char) );
+		}
+		else if(str == NULL)
+			str = (char*)malloc((len+1) * sizeof(char) );
+
+		strncpy(str,tmp,len+1);
+		str[len] = '\0';
+		len_r = strlen(str) + len_r+1;
 		i--;
 	}
-	return req;
+	return str;
 }
 
 /* cette fonction permet d'inserer les informations relatives à un hotel 
@@ -87,23 +110,30 @@ int 		insert(char* message)
 	/*Si le nombre d'éléments à écrire dans le fichier ne correspond pas aux nombres d'éléments écrit*/
 	if(fprintf(fp,"%s",(message+len+1)) != strlen(message+len+1))
 	{
-		fclose(fp);
+		fclose(fp);	free(requete);
 		return 1;
 	}	
 	fclose(fp);
+	free(requete);
 	return 0;
 }
 /* Cette fonction permet de rechercher dans le fichier s'il y a des hotels correspondant 
 aux informations demander par le client pour ensuite lui permettre de choisir un hotel afin de reserver
 une chambre */
-char** 		search(char* message)
+c_h 		search(char* message)
 {
 	FILE *fp;
-	char *s;  char *str; char tmp[100];	char **tabs = NULL;
-	int cat =0,nb_h_t = 0; //nombre d'hotel trouvé 
+	char *s;  char *str; char tmp[100];	char *c;//la catégorie
+	int cat =0; //nombre d'hotel trouvé 
 	int cat_d = 0; // catégorie demandée
+	c_h t_h; //t_h : tableau d'hotels
+
+	t_h = (c_h)malloc(sizeof(struct choix_h));
+	t_h->tabs = NULL;
+	t_h->nb_h_t = 0;
 	str = extract_str(message, 2);	// extraire le deuxième élement : la ville
-	cat = atoi(extract_str(message,3));
+	c = extract_str(message,3);		
+	cat = atoi(c);		free(c);
 	fp = fopen("hotel","r");
 	if(fp == NULL) //Erreur d'ouverture du fichier
 		return NULL;
@@ -112,36 +142,32 @@ char** 		search(char* message)
 		s = extract_str(tmp, 2);	//la ville 
 		str = tolowercase(str);// mettre le tous en miniscule
 		s = tolowercase(s);
-		if(strcmp(str,s)==0){// si la ville est trouvée dans le fichier hotel
-			++nb_h_t;
-			cat_d = atoi(extract_str(tmp,3));
+		if(strcmp(str,s)==0){	// si la ville est trouvée dans le fichier hotel
+			c = extract_str(tmp,3);		
+			cat_d = atoi(c);	free(c);
 			if(cat == cat_d){
-				tabs = mem_store_pointer(tabs,tmp, nb_h_t);
-				if(tabs == NULL)
+				++t_h->nb_h_t;
+				t_h = mem_store_pointer(t_h ,tmp);
+				if(t_h->tabs == NULL)
 					return NULL;
-				if( Emission(tmp) !=1)// aulieu d'emission, il faudrait stocker tmp dans un **p ainsi on pourra retourner tout les
-					printf("Erreur d'emission.\n");	// trouver qui correspondent au exigence du client 	
 			}
 				
 			//free(message);
 		}
 		free(s);
 	}
-	if(nb_h_t == 0){
-		return NULL;
-	}
-	free(str); 
-   	return tabs;
+	free(str);
+	fclose(fp); 
+   	return t_h;
 }
 
 
 int main ()
 {
-	int fini, err;	
+	int fini, err, i;	
 	char *message = NULL;
 	char *requete;
-	char **tabs;
-
+	c_h t_h;	
 	//char nomFichier[30];
 	//int extr_fich = 5;  // retour de la fonction extraitFichier
 	//char *extensionFichier; char *tmp;
@@ -173,15 +199,26 @@ int main ()
 					// recevoir le choix de l'utilisateur, stocker la reservation dans le fichier de reservation
 					// pour une autre reservation il faudra comparer le nombre de chambre de l'hotel choisit par l'utilisateur 
 					// et le nombre de chambre déjà reserver à cet hotel pour savoir s'il ya  des chambres de disponible
-					if((tabs = search(message))!=NULL){
+					t_h = search(message);
+					if(t_h !=NULL){
+						i = t_h->nb_h_t;
+						while(i>0)
+						{
+							//printf("%s\n",t_h->tabs[i-1] );
+							Emission(t_h->tabs[i-1]);
+							i--;
+						}
 						Emission("200\n");
-						printf("laaa taile de tabs est %zu\n",sizeof(tabs) );
+
+						free_str(t_h);// free la matrice
+						//free(message);  free(requete);
+						//exit(1);
 					}
 					else{ 
 						Emission("400\n");
 					}
 				}
-				free(message);
+				free(message); free(requete);
 			}else
 				fini = 1;
 		}
